@@ -1,6 +1,6 @@
 package kafka
 
-import ckafka "github.com/confluentinc/confluent-kafka-go/v2/kafka"
+import ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 
 type Producer struct {
 	ConfigMap *ckafka.ConfigMap

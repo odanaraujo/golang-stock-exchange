@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	ckafka "github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	kafka "github.com/odanaraujo/golang/stock-exchange/internal/infra"
 	"github.com/odanaraujo/golang/stock-exchange/internal/market/dto"
 	"github.com/odanaraujo/golang/stock-exchange/internal/market/entity"
@@ -19,13 +19,13 @@ func main() {
 	defer wg.Wait()
 
 	kafkaMsgChan := make(chan *ckafka.Message)
-	configMap := ckafka.ConfigMap{
+	configMap := &ckafka.ConfigMap{
 		"bootstrap.servers": "host.docker.internal:9094",
-		"group_id":          "myGroup",
-		"auto.offset.reset": "earliest",
+		"group.id":          "myGroup",
+		"auto.offset.reset": "latest",
 	}
-	producer := kafka.NewKafkaProducer(&configMap)
-	consume := kafka.NewConsumer(&configMap, []string{"input"})
+	producer := kafka.NewKafkaProducer(configMap)
+	consume := kafka.NewConsumer(configMap, []string{"input"})
 
 	go consume.Consume(kafkaMsgChan)
 
