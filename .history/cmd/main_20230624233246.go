@@ -50,7 +50,7 @@ func main() {
 	for res := range ordersOut {
 		output := transformer.TransformOutput(res)
 		outputJson, err := json.Marshal(output)
-		fmt.Println(string(outputJson))
+		fmt.Println(outputJson)
 		if err != nil {
 			errors.New("error marshal value of trade input in the kafka")
 		}

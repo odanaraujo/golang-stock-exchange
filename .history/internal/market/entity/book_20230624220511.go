@@ -23,10 +23,15 @@ func NewBook(orderChan chan *Order, orderChanOut chan *Order, wg *sync.WaitGroup
 	}
 }
 
-func (b *Book) Trade() {
+func (b *Book) TradeBuyOrders() {
 
 	buyOrders := make(map[string]*OrderQueue)
 	sellOrders := make(map[string]*OrderQueue)
+	// buyOrders := NewOrderQueue()
+	// sellOrders := NewOrderQueue()
+
+	// heap.Init(buyOrders)
+	// heap.Init(sellOrders)
 
 	for order := range b.OrdersChan {
 		asset := order.Asset.ID
@@ -104,6 +109,6 @@ func (b *Book) bookTransaction(buyOrSellOrder *Order, order *Order) {
 	transaction := NewTransaction(buyOrSellOrder, order, order.Shares, order.Price)
 	b.AddTransaction(transaction, b.Wg)
 	buyOrSellOrder.Transactions = append(buyOrSellOrder.Transactions, transaction)
-	b.OrdersChanOut <- buyOrSellOrder
-	b.OrdersChanOut <- order
+	b.OrderChanOut <- buyOrSellOrder
+	b.OrderChanOut <- order
 }

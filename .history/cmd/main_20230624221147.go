@@ -32,7 +32,8 @@ func main() {
 
 	//recebe do canal do kafka, joga no input, processa, joga no output e depois publica no kafka
 	book := entity.NewBook(ordersIn, ordersOut, wg)
-	go book.Trade()
+
+	go book.tr
 
 	go func() {
 		for msg := range kafkaMsgChan {
@@ -50,7 +51,7 @@ func main() {
 	for res := range ordersOut {
 		output := transformer.TransformOutput(res)
 		outputJson, err := json.Marshal(output)
-		fmt.Println(string(outputJson))
+		fmt.Println(outputJson)
 		if err != nil {
 			errors.New("error marshal value of trade input in the kafka")
 		}

@@ -10,7 +10,6 @@ import (
 	"github.com/odanaraujo/golang/stock-exchange/internal/market/dto"
 	"github.com/odanaraujo/golang/stock-exchange/internal/market/entity"
 	"github.com/odanaraujo/golang/stock-exchange/internal/transformer"
-	"github.com/pkg/errors"
 )
 
 func main() {
@@ -26,21 +25,22 @@ func main() {
 		"auto.offset.reset": "latest",
 	}
 	producer := kafka.NewKafkaProducer(configMap)
-	consume := kafka.NewConsumer(configMap, []string{"input"})
+	kafka := kafka.NewConsumer(configMap, []string{"input"})
 
-	go consume.Consume(kafkaMsgChan)
+	go kafka.Consume(kafkaMsgChan) // T2
 
-	//recebe do canal do kafka, joga no input, processa, joga no output e depois publica no kafka
+	// recebe do canal do kafka, joga no input, processa joga no output e depois publica no kafka
 	book := entity.NewBook(ordersIn, ordersOut, wg)
-	go book.Trade()
+	go book.Trade() // T3
 
 	go func() {
 		for msg := range kafkaMsgChan {
 			wg.Add(1)
 			fmt.Println(string(msg.Value))
 			tradeInput := dto.TradeInput{}
-			if err := json.Unmarshal(msg.Value, &tradeInput); err != nil {
-				errors.New("error unmarshal value of trade input in the kafka")
+			err := json.Unmarshal(msg.Value, &tradeInput)
+			if err != nil {
+				panic(err)
 			}
 			order := transformer.TransformInput(tradeInput)
 			ordersIn <- order
@@ -49,10 +49,10 @@ func main() {
 
 	for res := range ordersOut {
 		output := transformer.TransformOutput(res)
-		outputJson, err := json.Marshal(output)
+		outputJson, err := json.MarshalIndent(output, "", "  ")
 		fmt.Println(string(outputJson))
 		if err != nil {
-			errors.New("error marshal value of trade input in the kafka")
+			fmt.Println(err)
 		}
 		producer.Publish(outputJson, []byte("orders"), "output")
 	}

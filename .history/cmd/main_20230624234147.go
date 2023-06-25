@@ -32,7 +32,15 @@ func main() {
 
 	//recebe do canal do kafka, joga no input, processa, joga no output e depois publica no kafka
 	book := entity.NewBook(ordersIn, ordersOut, wg)
-	go book.Trade()
+
+	for _, order := range book.Order {
+		if order.OrderType == entity.ORDER_BUY {
+			go book.TradeBuyOrders()
+		}
+		if order.OrderType == entity.ORDER_SELL {
+			go book.TradeSellOrders()
+		}
+	}
 
 	go func() {
 		for msg := range kafkaMsgChan {

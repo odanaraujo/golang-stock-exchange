@@ -8,7 +8,7 @@ import (
 type Book struct {
 	Order         []*Order
 	Transaction   []*Transaction
-	OrdersChan    chan *Order
+	OrdesChan     chan *Order
 	OrdersChanOut chan *Order
 	Wg            *sync.WaitGroup
 }
@@ -17,16 +17,21 @@ func NewBook(orderChan chan *Order, orderChanOut chan *Order, wg *sync.WaitGroup
 	return &Book{
 		Order:         []*Order{},
 		Transaction:   []*Transaction{},
-		OrdersChan:    orderChan,
+		OrdersChan:     orderChan,
 		OrdersChanOut: orderChanOut,
 		Wg:            wg,
 	}
 }
 
-func (b *Book) Trade() {
+func (b *Book) TradeBuyOrders() {
 
 	buyOrders := make(map[string]*OrderQueue)
 	sellOrders := make(map[string]*OrderQueue)
+	// buyOrders := NewOrderQueue()
+	// sellOrders := NewOrderQueue()
+
+	// heap.Init(buyOrders)
+	// heap.Init(sellOrders)
 
 	for order := range b.OrdersChan {
 		asset := order.Asset.ID
@@ -77,6 +82,29 @@ func (b *Book) Trade() {
 	}
 }
 
+func (b *Book) TradeSellOrders() {
+
+	sellOrders := make(map[string]*OrderQueue)
+
+	for order := range b.OrderChan {
+		asset := order.Asset.ID
+		if sellOrders[asset] == nil {
+			sellOrders[asset] = NewOrderQueue()
+			heap.Init(sellOrders[asset])
+		}
+		sellOrders[asset].Push(order)
+		if sellOrders[asset].Len() > 0 && sellOrders[asset].Orders[0].Price <= order.Price {
+			buyOrder := sellOrders[asset].Pop().(*Order)
+			if buyOrder.PendingShares > 0 {
+				b.bookTransaction(buyOrder, order)
+				if buyOrder.PendingShares > 0 {
+					sellOrders[asset].Push(buyOrder)
+				}
+			}
+		}
+	}
+}
+
 func (b *Book) AddTransaction(transaction *Transaction, wg *sync.WaitGroup) {
 	defer wg.Done()
 	seelingShares := transaction.SellingOrder.PendingShares
@@ -104,6 +132,6 @@ func (b *Book) bookTransaction(buyOrSellOrder *Order, order *Order) {
 	transaction := NewTransaction(buyOrSellOrder, order, order.Shares, order.Price)
 	b.AddTransaction(transaction, b.Wg)
 	buyOrSellOrder.Transactions = append(buyOrSellOrder.Transactions, transaction)
-	b.OrdersChanOut <- buyOrSellOrder
-	b.OrdersChanOut <- order
+	b.OrderChanOut <- buyOrSellOrder
+	b.OrderChanOut <- order
 }
