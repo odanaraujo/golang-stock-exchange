@@ -1,6 +1,9 @@
 package kafka
 
-import ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
+import (
+	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/pkg/errors"
+)
 
 type Consumer struct {
 	ConfigMap *ckafka.ConfigMap
@@ -15,16 +18,21 @@ func NewConsumer(configMap *ckafka.ConfigMap, topics []string) *Consumer {
 }
 
 func (c *Consumer) Consume(msgChan chan *ckafka.Message) error {
-	consumer, err := ckafka.NewConsumer(c.ConfigMap)
+	consume, err := ckafka.NewConsumer(c.ConfigMap)
+
 	if err != nil {
-		panic(err)
+		return errors.New("error in the new consumer in the consumer")
 	}
-	err = consumer.SubscribeTopics(c.Topics, nil)
+
+	err = consume.SubscribeTopics(c.Topics, nil)
+
 	if err != nil {
-		panic(err)
+		return errors.New("error in the subscribe topics in the consumer")
 	}
+
 	for {
-		msg, err := consumer.ReadMessage(-1)
+		msg, err := consume.ReadMessage(-1)
+
 		if err == nil {
 			msgChan <- msg
 		}

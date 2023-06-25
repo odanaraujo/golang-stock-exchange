@@ -3,14 +3,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"sync"
-
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	kafka "github.com/odanaraujo/golang/stock-exchange/internal/infra"
 	"github.com/odanaraujo/golang/stock-exchange/internal/market/dto"
 	"github.com/odanaraujo/golang/stock-exchange/internal/market/entity"
 	"github.com/odanaraujo/golang/stock-exchange/internal/transformer"
 	"github.com/pkg/errors"
+	"sync"
 )
 
 func main() {
@@ -58,7 +57,6 @@ func main() {
 	for res := range ordersOut {
 		output := transformer.TransformOutput(res)
 		outputJson, err := json.Marshal(output)
-		fmt.Println(outputJson)
 		if err != nil {
 			errors.New("error marshal value of trade input in the kafka")
 		}

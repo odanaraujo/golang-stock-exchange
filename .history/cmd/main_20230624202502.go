@@ -3,14 +3,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"sync"
-
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	kafka "github.com/odanaraujo/golang/stock-exchange/internal/infra"
 	"github.com/odanaraujo/golang/stock-exchange/internal/market/dto"
 	"github.com/odanaraujo/golang/stock-exchange/internal/market/entity"
 	"github.com/odanaraujo/golang/stock-exchange/internal/transformer"
 	"github.com/pkg/errors"
+	"sync"
 )
 
 func main() {
